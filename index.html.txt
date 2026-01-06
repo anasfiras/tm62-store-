@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<title>tm62 Store</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+<style>
+:root{--p:#6c63ff;--s:#4b3fce;--bg:#f6f7ff}
+*{box-sizing:border-box}
+body{margin:0;font-family:Cairo,Arial;background:var(--bg)}
+header{background:#fff;padding:15px 20px;display:flex;justify-content:space-between;align-items:center;box-shadow:0 2px 12px rgba(0,0,0,.08);position:sticky;top:0}
+.brand{display:flex;align-items:center;gap:10px;font-weight:900;font-size:20px}
+.cart-btn{position:relative;background:linear-gradient(135deg,var(--p),var(--s));color:#fff;padding:8px 14px;border-radius:10px;cursor:pointer}
+.cart-count{position:absolute;top:-6px;right:-6px;background:red;color:#fff;font-size:12px;padding:2px 6px;border-radius:50%}
+.controls{padding:15px;display:flex;gap:10px;flex-wrap:wrap}
+.controls input,.controls select{padding:8px;border-radius:8px;border:1px solid #ccc}
+.products{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:20px;padding:20px}
+.product{background:#fff;border-radius:14px;padding:14px;text-align:center;box-shadow:0 8px 22px rgba(0,0,0,.08)}
+.product svg{width:100%;height:120px}
+.product h3{font-size:14px}
+.price{font-weight:900;color:var(--p)}
+.product button{margin-top:6px;background:var(--p);color:#fff;border:none;padding:8px 14px;border-radius:8px;cursor:pointer}
+.cart{position:fixed;top:0;left:-100%;width:100%;max-width:420px;height:100%;background:#fff;box-shadow:4px 0 25px rgba(0,0,0,.25);padding:20px;transition:.3s;overflow:auto;z-index:99}
+.cart.active{left:0}
+.buy{background:#25D366;color:#fff;text-align:center;padding:14px;border-radius:12px;text-decoration:none;display:block;margin-top:12px}
+footer{background:#fff;padding:20px;text-align:center;margin-top:40px}
+.social a{margin:0 8px;font-size:22px}
+</style>
+</head>
+
+<body>
+
+<header>
+  <div class="brand">tm62</div>
+  <div class="cart-btn" onclick="toggleCart()">
+    <i class="fa fa-cart-shopping"></i> السلة
+    <span id="cartCount" class="cart-count" style="display:none">0</span>
+  </div>
+</header>
+
+<div class="controls">
+  <input id="search" placeholder="بحث عن بطاقة">
+  <select id="category">
+    <option value="all">كل الفئات</option>
+  </select>
+</div>
+
+<div class="products" id="products"></div>
+
+<div class="cart" id="cart">
+  <h2>🛒 سلة المشتريات</h2>
+  <div id="cartItems"></div>
+  <h3 id="total"></h3>
+  <a id="buyBtn" class="buy"><i class="fa-brands fa-whatsapp"></i> التواصل والشراء</a>
+</div>
+
+<footer>
+  <p>© 2026 tm62 – جميع الحقوق محفوظة</p>
+  <div class="social">
+    <a href="https://wa.me/9647751434414"><i class="fa-brands fa-whatsapp"></i></a>
+    <a href="https://t.me/anasfiras"><i class="fa-brands fa-telegram"></i></a>
+    <a href="https://instagram.com/tm62"><i class="fa-brands fa-instagram-square"></i></a>
+  </div>
+</footer>
+
+<script>
+/* ================= PRODUCTS =================
+   مرتبة: المنصة → الريجن → الفئة
+*/
+const products = [
+
+/* ================= iTunes ================= */
+{n:"iTunes 2 USD",c:"iTunes",r:"USA",p:4059},
+{n:"iTunes 3 USD",c:"iTunes",r:"USA",p:5579},
+{n:"iTunes 4 USD",c:"iTunes",r:"USA",p:7099},
+{n:"iTunes 5 USD",c:"iTunes",r:"USA",p:8629},
+{n:"iTunes 10 USD",c:"iTunes",r:"USA",p:16299},
+{n:"iTunes 15 USD",c:"iTunes",r:"USA",p:24999},
+{n:"iTunes 20 USD",c:"iTunes",r:"USA",p:32499},
+
+{n:"iTunes 5 GBP",c:"iTunes",r:"UK",p:11999},
+{n:"iTunes 10 GBP",c:"iTunes",r:"UK",p:23999},
+{n:"iTunes 25 GBP",c:"iTunes",r:"UK",p:54999},
+
+{n:"iTunes 5 EUR",c:"iTunes",r:"DEU",p:11999},
+{n:"iTunes 1500 YEN",c:"iTunes",r:"JAPAN",p:31999},
+
+{n:"iTunes 25 TRY",c:"iTunes",r:"TURKEY",p:11799},
+{n:"iTunes 250 TRY",c:"iTunes",r:"TURKEY",p:109999},
+
+{n:"iTunes 50 SAR",c:"iTunes",r:"SAUDI",p:22999},
+{n:"iTunes 100 SAR",c:"iTunes",r:"SAUDI",p:42999},
+
+{n:"iTunes 50 AED",c:"iTunes",r:"UAE",p:23999},
+{n:"iTunes 5 CAD",c:"iTunes",r:"CANADA",p:8169},
+{n:"iTunes 10 CAD",c:"iTunes",r:"CANADA",p:15267},
+
+/* ================= Jawaker ================= */
+{n:"Jawaker Token 4,250",c:"Jawaker",r:"Global",p:2489},
+{n:"Jawaker Token 32,500",c:"Jawaker",r:"Global",p:8309},
+{n:"Jawaker Token 70,000",c:"Jawaker",r:"Global",p:15629},
+{n:"Jawaker Token 150,000",c:"Jawaker",r:"Global",p:31209},
+
+/* ================= Steam ================= */
+{n:"Steam 10 USD",c:"Steam",r:"USD",p:15799},
+{n:"Steam 20 USD",c:"Steam",r:"USD",p:32599},
+{n:"Steam 20 AED",c:"Steam",r:"AED",p:9499},
+{n:"Steam 50 AED",c:"Steam",r:"AED",p:20999},
+{n:"Steam 5 KWD",c:"Steam",r:"KWD",p:26999},
+{n:"Steam 20 QAR",c:"Steam",r:"QATAR",p:9499},
+{n:"Steam 50 QAR",c:"Steam",r:"QATAR",p:22999},
+{n:"Steam 20 SAR",c:"Steam",r:"SAR",p:9299},
+{n:"Steam 50 SAR",c:"Steam",r:"SAR",p:22799},
+
+/* ================= PlayStation ================= */
+{n:"PS Store 10 USD",c:"PlayStation",r:"USA",p:15499},
+{n:"PS Store 25 USD",c:"PlayStation",r:"USA",p:38399},
+{n:"PSN 10 USD",c:"PlayStation",r:"UAE",p:16199},
+{n:"PSN 20 USD",c:"PlayStation",r:"UAE",p:32299},
+{n:"PSN 10 USD",c:"PlayStation",r:"SAUDI",p:16999},
+{n:"PSN 20 USD",c:"PlayStation",r:"SAUDI",p:32999},
+
+/* ================= Xbox ================= */
+{n:"Xbox 5 USD",c:"Xbox",r:"USA",p:8399},
+{n:"Xbox 10 USD",c:"Xbox",r:"USA",p:15899},
+{n:"Xbox 20 USD",c:"Xbox",r:"USA",p:31529},
+{n:"Xbox Game Pass 1 Month",c:"Xbox",r:"USA",p:22999},
+{n:"Xbox 50 SAR",c:"Xbox",r:"SAUDI",p:22599},
+{n:"Xbox 59 AED",c:"Xbox",r:"UAE",p:26699},
+{n:"Xbox 99 AED",c:"Xbox",r:"UAE",p:43599},
+
+/* ================= Netflix ================= */
+{n:"Netflix 15 USD",c:"Netflix",r:"USA",p:27999},
+{n:"Netflix 20 USD",c:"Netflix",r:"USA",p:30499},
+{n:"Netflix 30 USD",c:"Netflix",r:"USA",p:50999},
+{n:"Netflix 35 USD",c:"Netflix",r:"USA",p:51999},
+{n:"Netflix 100 SAR",c:"Netflix",r:"SAUDI",p:42999},
+{n:"Netflix 100 AED",c:"Netflix",r:"UAE",p:43616},
+
+/* ================= Others ================= */
+{n:"Spotify 10 USD",c:"Spotify",r:"USA",p:16927},
+{n:"Roblox 10 USD",c:"Roblox",r:"Global",p:15999},
+{n:"Amazon 10 GBP",c:"Amazon",r:"UK",p:23499},
+{n:"Twitch 15 USD",c:"Twitch",r:"USA",p:24844},
+{n:"Minecraft Game",c:"Minecraft",r:"Global",p:61999}
+
+];
+
+let cart=[];
+
+const catSel=document.getElementById("category");
+[...new Set(products.map(x=>x.c))].forEach(c=>{
+ const o=document.createElement("option");
+ o.value=c;
+ o.textContent=c;
+ catSel.appendChild(o);
+});
+
+function cardSVG(name){
+ return `<svg viewBox="0 0 300 160">
+  <defs>
+   <linearGradient id="g" x1="0" y1="0" x2="1" y2="1">
+    <stop offset="0" stop-color="#6c63ff"/>
+    <stop offset="1" stop-color="#4b3fce"/>
+   </linearGradient>
+  </defs>
+  <rect width="300" height="160" rx="18" fill="url(#g)"/>
+  <text x="150" y="90" text-anchor="middle" fill="#fff" font-size="20" font-weight="900">${name}</text>
+ </svg>`;
+}
+
+function render(){
+ const q=document.getElementById("search").value.toLowerCase();
+ const cat=catSel.value;
+ const cont=document.getElementById("products");
+ cont.innerHTML="";
+ products
+ .filter(p=>p.n.toLowerCase().includes(q))
+ .filter(p=>cat==="all"||p.c===cat)
+ .forEach(p=>{
+  cont.innerHTML+=`
+  <div class="product">
+    ${cardSVG(p.c)}
+    <h3>${p.n} (${p.r})</h3>
+    <div class="price">${p.p} د.ع</div>
+    <button onclick="addToCart('${p.n}','${p.r}',${p.p})">إضافة للسلة</button>
+  </div>`;
+ });
+}
+
+function addToCart(n,r,p){
+ cart.push({n,r,p});
+ updateCart();
+ showToast(`تم إضافة ${n} إلى السلة`);
+ const cc=document.getElementById("cartCount");
+ cc.style.display="inline";
+ cc.textContent=cart.length;
+}
+
+function toggleCart(){
+ document.getElementById("cart").classList.toggle("active");
+}
+
+function updateCart(){
+ let items=document.getElementById("cartItems");
+ let total=0;
+ items.innerHTML="";
+ cart.forEach(i=>{
+  items.innerHTML+=`<p>${i.n} (${i.r}) - ${i.p} د.ع</p>`;
+  total+=i.p;
+ });
+ document.getElementById("total").innerText="المجموع: "+total+" د.ع";
+ let msg="مرحبا، أريد أشتري:%0A";
+ cart.forEach(i=>msg+=`- ${i.n} (${i.r})%0A`);
+ msg+=`المجموع: ${total} د.ع`;
+ document.getElementById("buyBtn").href="https://wa.me/9647751434414?text="+msg;
+}
+
+function showToast(msg){
+ let t=document.createElement("div");
+ t.style.cssText="position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:#000;color:#fff;padding:12px 18px;border-radius:10px;z-index:999";
+ t.innerText=msg;
+ document.body.appendChild(t);
+ setTimeout(()=>t.remove(),2000);
+}
+
+document.getElementById("search").oninput=render;
+catSel.onchange=render;
+render();
+</script>
+
+</body>
+</html>
